@@ -1,10 +1,12 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <expected>
 #include <filesystem>
 #include <map>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -30,6 +32,8 @@ public:
     [[nodiscard]] static std::expected<std::filesystem::path, Vulkan::Error> find(const std::filesystem::path& library);
     //! Reads libnvidia-ngx-dlssd.so.310.9.16 of the DLSS SDK, under any name.
     [[nodiscard]] std::expected<void, Vulkan::Error> open(const std::filesystem::path& library);
+    //! Reads the bytes of the library from memory.
+    [[nodiscard]] std::expected<void, Vulkan::Error> open(std::span<const std::byte> bytes);
 
     //! Name ("b16.t08": buffer 16, tensor 8) to tensor.
     std::map<std::string, WeightTensor, std::less<>> tensors;

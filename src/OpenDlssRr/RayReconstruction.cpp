@@ -150,12 +150,17 @@ std::expected<void, Error> RayReconstruction::State::open(const Settings& settin
         return fail("the render size must not be 0 or larger than the output size");
     postSize = {3 * ((outputSize[0] + 1) / 2), 3 * ((outputSize[1] + 1) / 2)};
 
-    const auto library = Weights::find(settings.library);
-    if (!library)
-        return std::unexpected(library.error());
     Weights weights;
-    if (auto result = weights.open(*library); !result)
-        return result;
+    if (!settings.libraryData.empty()) {
+        if (auto result = weights.open(settings.libraryData); !result)
+            return result;
+    } else {
+        const auto library = Weights::find(settings.library);
+        if (!library)
+            return std::unexpected(library.error());
+        if (auto result = weights.open(*library); !result)
+            return result;
+    }
     if (auto result = network.open(device, weights, settings.shaders, renderSize); !result)
         return result;
     for (const auto& [kernel, result] :

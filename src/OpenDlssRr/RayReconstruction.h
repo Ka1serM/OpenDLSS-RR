@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <expected>
 #include <filesystem>
@@ -72,6 +73,8 @@ struct Settings {
     VkPipelineCache pipelineCache = VK_NULL_HANDLE;
     //! Optional: the path of the DLSS Ray Reconstruction library, under any name; if empty, findLibrary() searches (docs/weights.md).
     std::filesystem::path library;
+    //! Optional: the bytes of the library in memory, read in place of `library`; open() does not keep them.
+    std::span<const std::byte> libraryData;
     ShaderCode shaders;
     std::uint32_t renderWidth = 0;
     std::uint32_t renderHeight = 0;

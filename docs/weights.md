@@ -8,7 +8,8 @@ it. Nothing is written to disk.
 The runtime reads `libnvidia-ngx-dlssd.so.310.9.16` of the DLSS SDK ([direct download](https://github.com/NVIDIA/DLSS/raw/v310.9.16/lib/Linux_x86_64/rel/libnvidia-ngx-dlssd.so.310.9.16)). The file can have any name. It is only a
 data file for OpenDLSS-RR, so a Windows host reads it too. `open()` refuses a file with a different SHA-256.
 
-`Weights::find()` (public: `findLibrary()`) takes the first of:
+A host can also pass the bytes of the file in `Settings::libraryData`; then nothing is searched. Else `Weights::find()` (public:
+`findLibrary()`) takes the first of:
 
 1. `Settings::library`, if it is not empty;
 2. the path in the environment variable `OPENDLSS_RR_LIBRARY`;

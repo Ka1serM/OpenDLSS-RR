@@ -121,10 +121,15 @@ std::expected<void, Error> Weights::open(const std::filesystem::path& library) {
     const auto file = readFile(library);
     if (!file)
         return std::unexpected(file.error());
-    const std::span<const std::byte> bytes = *file;
+    if (auto result = open(std::span<const std::byte>(*file)); !result)
+        return fail(library.string() + ": " + result.error().message);
+    return {};
+}
+
+std::expected<void, Error> Weights::open(const std::span<const std::byte> bytes) {
     const std::string digest = sha256(bytes);
     if (digest != librarySha256)
-        return fail(std::format("{} is not the supported DLSS Ray Reconstruction library (SHA-256 {}): download {}", library.string(), digest, downloadUrl));
+        return fail(std::format("not the supported DLSS Ray Reconstruction library (SHA-256 {}): download {}", digest, downloadUrl));
 
     const auto lutBytes = range(bytes, lutOffset, 65536 * 2);
     if (!lutBytes)
