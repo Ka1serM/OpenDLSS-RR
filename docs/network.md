@@ -1,6 +1,6 @@
 # Network
 
-The network of DLSS Ray Reconstruction (preset F, library version 310.9) as plain layers. `src/OpenDlssRr/Network.cpp` and the Slang
+The network of DLSS Ray Reconstruction (library version 310.9) as plain layers. `src/OpenDlssRr/Network.cpp` and the Slang
 passes in `src/OpenDlssRr/Shaders` implement this file. The weights come from the library of the user (`docs/weights.md`).
 
 ## Levels

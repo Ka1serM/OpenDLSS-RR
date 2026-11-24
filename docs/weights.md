@@ -7,7 +7,7 @@ it. Nothing is written to disk.
 
 | file | source |
 | --- | --- |
-| `libnvidia-ngx-dlssd.so.310.9.16` | the DLSS SDK (`lib/Linux_x86_64/rel`) |
+| `libnvidia-ngx-dlssd.so.310.9.16` | the DLSS SDK: [direct download](https://github.com/NVIDIA/DLSS/raw/v310.9.16/lib/Linux_x86_64/rel/libnvidia-ngx-dlssd.so.310.9.16) |
 | `libnvidia-ngx-builtin-dlssd.so.310.9.0` | the NVIDIA Linux driver (for example in `/usr/lib64` or `/usr/lib/x86_64-linux-gnu`) |
 
 The library is only a data file for OpenDLSS-RR, so a Windows host can read the Linux file too. `open()` refuses a file with a different

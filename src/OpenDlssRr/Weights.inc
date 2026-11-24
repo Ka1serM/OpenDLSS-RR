@@ -2,6 +2,8 @@ constexpr Library libraries[] = {
     {"libnvidia-ngx-dlssd.so.310.9.16", "a5d59de18841f15779039dda567a15dd723ba737915f489271fdb5f109fbfb96"},
     {"libnvidia-ngx-builtin-dlssd.so.310.9.0", "c220c87263770cd732e4f391d70d37e9a7a3d51de4ed6ee940dafa79cfa5a559"},
 };
+//! The supported library of the DLSS SDK on GitHub.
+constexpr std::string_view downloadUrl = "https://github.com/NVIDIA/DLSS/raw/v310.9.16/lib/Linux_x86_64/rel/libnvidia-ngx-dlssd.so.310.9.16";
 constexpr std::uint64_t lutOffset = 7396352;
 constexpr std::array<std::uint64_t, 2> pairScaleOffsets{1006216, 7528028};
 

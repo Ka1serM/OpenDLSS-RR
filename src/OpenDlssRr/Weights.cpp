@@ -113,12 +113,8 @@ std::expected<std::filesystem::path, Error> Weights::find(const std::filesystem:
         for (const Library& known : libraries)
             if (std::filesystem::is_regular_file(folder / known.name, error))
                 return folder / known.name;
-    std::string names;
-    for (const Library& known : libraries)
-        names += std::format("{}{}", names.empty() ? "" : " or ", known.name);
-    return fail(std::format("no DLSS Ray Reconstruction library: set its path, set OPENDLSS_RR_LIBRARY, or copy {} to the OpenDLSS-RR "
-                            "folder of the user data",
-                            names));
+    return fail("no DLSS Ray Reconstruction library: download " + std::string(downloadUrl)
+                + " and set its path, set OPENDLSS_RR_LIBRARY, or copy it to the OpenDLSS-RR folder of the user data");
 }
 
 std::expected<void, Error> Weights::open(const std::filesystem::path& library) {
