@@ -19,7 +19,7 @@ It has no vendor-specific code: any GPU with the features below runs it, includi
    default subgroup size is not 32. `checkDevice()` also checks for 16x16x16 FP16 cooperative matrices with FP16 and FP32 accumulators.
    Both take the instance of the host and, optionally, its `vkGetInstanceProcAddr` (else the one of `libvulkan.so.1` or `vulkan-1.dll`).
 3. Call `RayReconstruction::open()` with `Settings`: the instance, physical device, device, an optional pipeline cache, the shaders, an
-   optional path of the DLSS Ray Reconstruction library of the user (`library`, `docs/weights.md`), and the render and output sizes. Each
+   optional file or folder of the DLSS Ray Reconstruction library of the user (`library`, `docs/weights.md`), and the render and output sizes. Each
    pair of sizes needs its own object.
 4. For each frame, call `record()` with a command buffer of the host. The library never submits.
    - All images must be in `VK_IMAGE_LAYOUT_GENERAL`. The output is `R16G16B16A16_SFLOAT` with storage use.

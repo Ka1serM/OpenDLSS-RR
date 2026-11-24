@@ -1,5 +1,6 @@
 #include "OpenDlssRr/Weights.h"
 
+#include <algorithm>
 #include <bit>
 #include <cstdio>
 #include <cstdlib>
@@ -23,6 +24,7 @@ enum class Rounding { None, E4m3 };
 //! A library that open() reads: its file name and the SHA-256 of its bytes.
 struct Library {
     std::string_view name;
+    std::uintmax_t size;
     std::string_view sha256;
 };
 
@@ -61,21 +63,25 @@ std::filesystem::path environment(const char* name) {
     return value ? std::filesystem::path(value) : std::filesystem::path();
 }
 
-//! The folders of the NVIDIA driver (Linux), then the OpenDLSS-RR folder of the user data.
-std::vector<std::filesystem::path> searchFolders() {
-    std::vector<std::filesystem::path> folders;
+//! The folders where the NVIDIA driver installs its built-in library.
+std::vector<std::filesystem::path> driverFolders() {
 #ifdef _WIN32
-    if (const std::filesystem::path data = environment("LOCALAPPDATA"); !data.empty())
-        folders.push_back(data / "OpenDLSS-RR");
+    return {};
 #else
-    for (const char* folder : {"/usr/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib", "/lib64", "/lib/x86_64-linux-gnu"})
-        folders.emplace_back(folder);
-    if (const std::filesystem::path data = environment("XDG_DATA_HOME"); !data.empty())
-        folders.push_back(data / "OpenDLSS-RR");
-    else if (const std::filesystem::path home = environment("HOME"); !home.empty())
-        folders.push_back(home / ".local/share/OpenDLSS-RR");
+    return {"/usr/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib", "/lib64", "/lib/x86_64-linux-gnu"};
 #endif
-    return folders;
+}
+
+//! A file in the folder with the size of a supported library, whatever its name.
+std::filesystem::path findInFolder(const std::filesystem::path& folder) {
+    std::error_code error;
+    for (const Library& known : libraries)
+        if (std::filesystem::is_regular_file(folder / known.name, error))
+            return folder / known.name;
+    for (std::filesystem::directory_iterator entry(folder, error), end; !error && entry != end; entry.increment(error))
+        if (entry->is_regular_file(error) && std::ranges::any_of(libraries, [&](const Library& known) { return entry->file_size(error) == known.size; }))
+            return entry->path();
+    return {};
 }
 
 std::expected<std::span<const std::byte>, Error> range(const std::span<const std::byte> file, const std::uint64_t offset, const std::uint64_t size) {
@@ -103,18 +109,38 @@ float halfToFloat(const std::uint16_t half) {
     return std::bit_cast<float>(sign | ((exponent + 112) << 23) | (mantissa << 13));
 }
 
+std::filesystem::path Weights::folder() {
+#ifdef _WIN32
+    if (const std::filesystem::path data = environment("LOCALAPPDATA"); !data.empty())
+        return data / "OpenDLSS-RR";
+#else
+    if (const std::filesystem::path data = environment("XDG_DATA_HOME"); !data.empty())
+        return data / "OpenDLSS-RR";
+    if (const std::filesystem::path home = environment("HOME"); !home.empty())
+        return home / ".local" / "share" / "OpenDLSS-RR";
+#endif
+    return {};
+}
+
 std::expected<std::filesystem::path, Error> Weights::find(const std::filesystem::path& library) {
-    if (!library.empty())
-        return library;
-    if (std::filesystem::path path = environment("OPENDLSS_RR_LIBRARY"); !path.empty())
-        return path;
     std::error_code error;
-    for (const std::filesystem::path& folder : searchFolders())
+    if (!library.empty() && !std::filesystem::is_directory(library, error))
+        return library;
+    if (std::filesystem::path path = environment("OPENDLSS_RR_LIBRARY"); library.empty() && !path.empty())
+        return path;
+    const std::filesystem::path user = library.empty() ? folder() : library;
+    if (std::filesystem::path path = user.empty() ? user : findInFolder(user); !path.empty())
+        return path;
+    for (const std::filesystem::path& driver : driverFolders())
         for (const Library& known : libraries)
-            if (std::filesystem::is_regular_file(folder / known.name, error))
-                return folder / known.name;
-    return fail("no DLSS Ray Reconstruction library: download " + std::string(downloadUrl)
-                + " and set its path, set OPENDLSS_RR_LIBRARY, or copy it to the OpenDLSS-RR folder of the user data");
+            if (std::filesystem::is_regular_file(driver / known.name, error))
+                return driver / known.name;
+    if (user.empty())
+        return fail("no DLSS Ray Reconstruction library: download " + std::string(downloadUrl) + " and set OPENDLSS_RR_LIBRARY to its path");
+    if (!library.empty())
+        return fail("no DLSS Ray Reconstruction library in " + user.string() + ": download " + std::string(downloadUrl) + " into it");
+    std::filesystem::create_directories(user, error);
+    return fail("no DLSS Ray Reconstruction library: download " + std::string(downloadUrl) + " into " + user.string());
 }
 
 std::expected<void, Error> Weights::open(const std::filesystem::path& library) {

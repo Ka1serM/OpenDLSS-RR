@@ -15,11 +15,14 @@ SHA-256.
 
 `Weights::find()` (public: `findLibrary()`) takes the first of:
 
-1. `Settings::library`, if it is not empty;
-2. the path in the environment variable `OPENDLSS_RR_LIBRARY`;
-3. a supported file in the folders of the driver (Linux only);
-4. a supported file in the OpenDLSS-RR folder of the user data: `$XDG_DATA_HOME/OpenDLSS-RR` or `~/.local/share/OpenDLSS-RR` (Linux),
-   `%LOCALAPPDATA%\OpenDLSS-RR` (Windows).
+1. `Settings::library`, if it is a file;
+2. the path in the environment variable `OPENDLSS_RR_LIBRARY`, if `Settings::library` is empty;
+3. a file in the folder `Settings::library`, or if it is empty in `getLibraryFolder()`: `$XDG_DATA_HOME/OpenDLSS-RR` or
+   `~/.local/share/OpenDLSS-RR` (Linux), `%LOCALAPPDATA%\OpenDLSS-RR` (Windows). The name does not matter: a file with the size of a
+   supported library is taken;
+4. the built-in library of the NVIDIA driver in the folders of the driver (Linux only).
+
+When it finds nothing, it creates `getLibraryFolder()` and the error gives the download link and the folder.
 
 ## Weights.inc
 

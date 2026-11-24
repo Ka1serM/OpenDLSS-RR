@@ -3,14 +3,18 @@
 DLSS Ray Reconstruction as a plain Vulkan 1.3 library, with the network as readable Slang compute shaders. It has no vendor-specific
 code: it runs on any GPU with `VK_KHR_cooperative_matrix` (NVIDIA, AMD and Intel).
 
-The weights are not in this repository. The runtime reads them from a DLSS Ray Reconstruction library when it opens:
+The weights are not in this repository. The runtime reads them from a DLSS Ray Reconstruction library when it opens. To install it,
+download [`libnvidia-ngx-dlssd.so.310.9.16`](https://github.com/NVIDIA/DLSS/raw/v310.9.16/lib/Linux_x86_64/rel/libnvidia-ngx-dlssd.so.310.9.16) from the
+[DLSS SDK](https://github.com/NVIDIA/DLSS) and put it, under any name, in:
 
-- **Linux with an NVIDIA driver that installs `libnvidia-ngx-builtin-dlssd.so.310.9.0`** (620.70 does): the runtime finds it. Other
-  driver versions can have a different file: then use the download below.
-- **All other systems, Windows too**: download
-  [`libnvidia-ngx-dlssd.so.310.9.16`](https://github.com/NVIDIA/DLSS/raw/v310.9.16/lib/Linux_x86_64/rel/libnvidia-ngx-dlssd.so.310.9.16) from the
-  [DLSS SDK](https://github.com/NVIDIA/DLSS) and put it in `~/.local/share/OpenDLSS-RR` (Linux) or `%LOCALAPPDATA%\OpenDLSS-RR`
-  (Windows), or give its path to the runtime. The Linux file works on Windows: the runtime only reads its data.
+| system | folder |
+| --- | --- |
+| Linux | `$XDG_DATA_HOME/OpenDLSS-RR`, by default `~/.local/share/OpenDLSS-RR` |
+| Windows | `%LOCALAPPDATA%\OpenDLSS-RR` |
+
+The same file works on Linux and Windows: the runtime only reads its data. On Linux, the runtime also finds the built-in library of the
+NVIDIA driver when it is a supported version (`libnvidia-ngx-builtin-dlssd.so.310.9.0`, for example in driver 620.70). A host can give
+a file or another folder in `Settings::library`.
 
 ## Use
 

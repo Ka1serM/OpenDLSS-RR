@@ -127,6 +127,10 @@ std::expected<void, Error> checkDevice(VkInstance instance, VkPhysicalDevice phy
     return Vulkan::checkFeatures(physicalDevice);
 }
 
+std::filesystem::path getLibraryFolder() {
+    return Weights::folder();
+}
+
 std::expected<std::filesystem::path, Error> findLibrary(const std::filesystem::path& library) {
     return Weights::find(library);
 }

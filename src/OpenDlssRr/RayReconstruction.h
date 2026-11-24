@@ -28,6 +28,8 @@ using Error = Vulkan::Error;
 [[nodiscard]] std::expected<void, Error> checkDevice(VkInstance instance, VkPhysicalDevice physicalDevice,
                                                      PFN_vkGetInstanceProcAddr getInstanceProcAddr = nullptr);
 
+//! The folder where the user puts the DLSS Ray Reconstruction library, under any name; findLibrary() creates it when it finds nothing.
+[[nodiscard]] std::filesystem::path getLibraryFolder();
 //! The DLSS Ray Reconstruction library that open() reads with Settings::library (see there), or why there is none.
 [[nodiscard]] std::expected<std::filesystem::path, Error> findLibrary(const std::filesystem::path& library = {});
 
@@ -68,7 +70,7 @@ struct Settings {
     VkDevice device = VK_NULL_HANDLE;
     //! Optional: a pipeline cache of the host.
     VkPipelineCache pipelineCache = VK_NULL_HANDLE;
-    //! Optional path of the DLSS Ray Reconstruction library to read the weights from; if empty, findLibrary() searches (docs/weights.md).
+    //! Optional: the DLSS Ray Reconstruction library file, or the folder to look in for it in place of getLibraryFolder() (docs/weights.md).
     std::filesystem::path library;
     ShaderCode shaders;
     std::uint32_t renderWidth = 0;
