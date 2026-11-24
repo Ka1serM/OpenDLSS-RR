@@ -1,0 +1,26 @@
+#! The library loads Vulkan from the host at run time, so it needs only the headers; a host such as NoorRHI gives the target.
+if(NOT TARGET Vulkan::Headers)
+    find_package(VulkanHeaders CONFIG QUIET HINTS "$ENV{VULKAN_SDK}")
+endif()
+if(NOT TARGET Vulkan::Headers)
+    find_package(Vulkan REQUIRED)
+endif()
+
+file(GLOB_RECURSE open_dlss_rr_sources CONFIGURE_DEPENDS OpenDlssRr/*.cpp)
+list(REMOVE_ITEM open_dlss_rr_sources "${CMAKE_CURRENT_SOURCE_DIR}/OpenDlssRr/EmbeddedShaders.cpp")
+add_library(OpenDlssRr STATIC ${open_dlss_rr_sources})
+add_library(OpenDlssRr::OpenDlssRr ALIAS OpenDlssRr)
+target_include_directories(OpenDlssRr PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(OpenDlssRr PUBLIC Vulkan::Headers PRIVATE ${CMAKE_DL_LIBS})
+target_compile_features(OpenDlssRr PUBLIC cxx_std_23)
+target_compile_definitions(OpenDlssRr PRIVATE VK_NO_PROTOTYPES)
+#! The camera words are float32 in a fixed order, so the compiler must not make fused multiply-adds.
+if(MSVC)
+    target_compile_options(OpenDlssRr PRIVATE /W4 /fp:precise)
+else()
+    target_compile_options(OpenDlssRr PRIVATE -Wall -Wextra -Wno-missing-field-initializers -ffp-contract=off)
+endif()
+
+if(OPENDLSS_RR_EMBED_SHADERS)
+    include("${PROJECT_SOURCE_DIR}/cmake/EmbedShaders.cmake")
+endif()

@@ -1,0 +1,129 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 29,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-${presetName}"
+    },
+    {
+      "name": "linux",
+      "hidden": true,
+      "inherits": "base",
+      "description": "Clang.",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++"
+      }
+    },
+    {
+      "name": "debug",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "relwithdebinfo",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "release",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "linux-debug",
+      "displayName": "Linux Debug",
+      "inherits": [
+        "linux",
+        "debug"
+      ]
+    },
+    {
+      "name": "linux-relwithdebinfo",
+      "displayName": "Linux RelWithDebInfo",
+      "inherits": [
+        "linux",
+        "relwithdebinfo"
+      ]
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release",
+      "inherits": [
+        "linux",
+        "release"
+      ]
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "linux-debug",
+      "configurePreset": "linux-debug"
+    },
+    {
+      "name": "linux-relwithdebinfo",
+      "configurePreset": "linux-relwithdebinfo"
+    },
+    {
+      "name": "linux-release",
+      "configurePreset": "linux-release"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "linux-debug",
+      "displayName": "Linux Debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-debug"
+        },
+        {
+          "type": "build",
+          "name": "linux-debug"
+        }
+      ]
+    },
+    {
+      "name": "linux-relwithdebinfo",
+      "displayName": "Linux RelWithDebInfo",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-relwithdebinfo"
+        },
+        {
+          "type": "build",
+          "name": "linux-relwithdebinfo"
+        }
+      ]
+    },
+    {
+      "name": "linux-release",
+      "displayName": "Linux Release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "linux-release"
+        },
+        {
+          "type": "build",
+          "name": "linux-release"
+        }
+      ]
+    }
+  ]
+}
