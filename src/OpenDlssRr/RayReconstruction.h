@@ -70,7 +70,7 @@ struct Settings {
     VkDevice device = VK_NULL_HANDLE;
     //! Optional: a pipeline cache of the host.
     VkPipelineCache pipelineCache = VK_NULL_HANDLE;
-    //! Optional: the DLSS Ray Reconstruction library file, or the folder to look in for it in place of getLibraryFolder() (docs/weights.md).
+    //! Optional: the path of the DLSS Ray Reconstruction library, under any name; if empty, findLibrary() searches (docs/weights.md).
     std::filesystem::path library;
     ShaderCode shaders;
     std::uint32_t renderWidth = 0;

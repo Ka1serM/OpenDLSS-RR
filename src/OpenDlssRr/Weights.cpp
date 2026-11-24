@@ -21,17 +21,9 @@ using Vulkan::fail;
 enum class Precision { Half, Single };
 enum class Rounding { None, E4m3 };
 
-//! A library that open() reads: its file name and the SHA-256 of its bytes.
-struct Library {
-    std::string_view name;
-    std::uintmax_t size;
-    std::string_view sha256;
-};
-
-//! The offset of a constant in each library of `libraries`.
 struct ConstantEntry {
     std::string_view name;
-    std::array<std::uint64_t, 2> offsets;
+    std::uint64_t offset;
     Precision precision;
 };
 
@@ -63,23 +55,11 @@ std::filesystem::path environment(const char* name) {
     return value ? std::filesystem::path(value) : std::filesystem::path();
 }
 
-//! The folders where the NVIDIA driver installs its built-in library.
-std::vector<std::filesystem::path> driverFolders() {
-#ifdef _WIN32
-    return {};
-#else
-    return {"/usr/lib64", "/usr/lib/x86_64-linux-gnu", "/usr/lib", "/lib64", "/lib/x86_64-linux-gnu"};
-#endif
-}
-
-//! A file in the folder with the size of a supported library, whatever its name.
+//! A file in the folder with the size of the library, whatever its name.
 std::filesystem::path findInFolder(const std::filesystem::path& folder) {
     std::error_code error;
-    for (const Library& known : libraries)
-        if (std::filesystem::is_regular_file(folder / known.name, error))
-            return folder / known.name;
     for (std::filesystem::directory_iterator entry(folder, error), end; !error && entry != end; entry.increment(error))
-        if (entry->is_regular_file(error) && std::ranges::any_of(libraries, [&](const Library& known) { return entry->file_size(error) == known.size; }))
+        if (entry->is_regular_file(error) && entry->file_size(error) == librarySize)
             return entry->path();
     return {};
 }
@@ -123,22 +103,16 @@ std::filesystem::path Weights::folder() {
 }
 
 std::expected<std::filesystem::path, Error> Weights::find(const std::filesystem::path& library) {
-    std::error_code error;
-    if (!library.empty() && !std::filesystem::is_directory(library, error))
+    if (!library.empty())
         return library;
-    if (std::filesystem::path path = environment("OPENDLSS_RR_LIBRARY"); library.empty() && !path.empty())
+    if (std::filesystem::path path = environment("OPENDLSS_RR_LIBRARY"); !path.empty())
         return path;
-    const std::filesystem::path user = library.empty() ? folder() : library;
-    if (std::filesystem::path path = user.empty() ? user : findInFolder(user); !path.empty())
-        return path;
-    for (const std::filesystem::path& driver : driverFolders())
-        for (const Library& known : libraries)
-            if (std::filesystem::is_regular_file(driver / known.name, error))
-                return driver / known.name;
+    const std::filesystem::path user = folder();
     if (user.empty())
         return fail("no DLSS Ray Reconstruction library: download " + std::string(downloadUrl) + " and set OPENDLSS_RR_LIBRARY to its path");
-    if (!library.empty())
-        return fail("no DLSS Ray Reconstruction library in " + user.string() + ": download " + std::string(downloadUrl) + " into it");
+    if (std::filesystem::path path = findInFolder(user); !path.empty())
+        return path;
+    std::error_code error;
     std::filesystem::create_directories(user, error);
     return fail("no DLSS Ray Reconstruction library: download " + std::string(downloadUrl) + " into " + user.string());
 }
@@ -149,11 +123,8 @@ std::expected<void, Error> Weights::open(const std::filesystem::path& library) {
         return std::unexpected(file.error());
     const std::span<const std::byte> bytes = *file;
     const std::string digest = sha256(bytes);
-    std::size_t version = 0;
-    while (version < std::size(libraries) && libraries[version].sha256 != digest)
-        ++version;
-    if (version == std::size(libraries))
-        return fail(std::format("{} has SHA-256 {}, which is not that of a supported library", library.string(), digest));
+    if (digest != librarySha256)
+        return fail(std::format("{} is not the supported DLSS Ray Reconstruction library (SHA-256 {}): download {}", library.string(), digest, downloadUrl));
 
     const auto lutBytes = range(bytes, lutOffset, 65536 * 2);
     if (!lutBytes)
@@ -169,7 +140,7 @@ std::expected<void, Error> Weights::open(const std::filesystem::path& library) {
     constants.clear();
     for (const ConstantEntry& entry : constantEntries) {
         const bool single = entry.precision == Precision::Single;
-        const auto value = range(bytes, entry.offsets[version], single ? sizeof(float) : sizeof(std::uint16_t));
+        const auto value = range(bytes, entry.offset, single ? sizeof(float) : sizeof(std::uint16_t));
         if (!value)
             return std::unexpected(value.error());
         float number = 0.0f;

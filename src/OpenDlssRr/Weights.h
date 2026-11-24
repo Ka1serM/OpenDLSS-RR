@@ -26,9 +26,9 @@ class Weights {
 public:
     //! The OpenDLSS-RR folder of the user data, where the user puts the library: $XDG_DATA_HOME or ~/.local/share, %LOCALAPPDATA%.
     [[nodiscard]] static std::filesystem::path folder();
-    //! The library file `library`, or a supported file in the folder `library`; if it is empty, OPENDLSS_RR_LIBRARY, folder(), then the driver.
+    //! `library` if it is not empty, else OPENDLSS_RR_LIBRARY, else the file in folder().
     [[nodiscard]] static std::expected<std::filesystem::path, Vulkan::Error> find(const std::filesystem::path& library);
-    //! Reads a supported library: libnvidia-ngx-dlssd.so.310.9.16 of the DLSS SDK or libnvidia-ngx-builtin-dlssd.so.310.9.0 of the driver.
+    //! Reads libnvidia-ngx-dlssd.so.310.9.16 of the DLSS SDK, under any name.
     [[nodiscard]] std::expected<void, Vulkan::Error> open(const std::filesystem::path& library);
 
     //! Name ("b16.t08": buffer 16, tensor 8) to tensor.

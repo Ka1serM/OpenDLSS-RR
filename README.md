@@ -12,9 +12,8 @@ download [`libnvidia-ngx-dlssd.so.310.9.16`](https://github.com/NVIDIA/DLSS/raw/
 | Linux | `$XDG_DATA_HOME/OpenDLSS-RR`, by default `~/.local/share/OpenDLSS-RR` |
 | Windows | `%LOCALAPPDATA%\OpenDLSS-RR` |
 
-The same file works on Linux and Windows: the runtime only reads its data. On Linux, the runtime also finds the built-in library of the
-NVIDIA driver when it is a supported version (`libnvidia-ngx-builtin-dlssd.so.310.9.0`, for example in driver 620.70). A host can give
-a file or another folder in `Settings::library`.
+The same file works on Linux and Windows: the runtime only reads its data. A host can also give the path of the file, under any name,
+in `Settings::library`.
 
 ## Use
 
@@ -38,7 +37,7 @@ auto recorded = reconstruction.record(commandBuffer, textures, {.jitter = jitter
 
 - `docs/runtime.md`: how to add the library to a renderer: device extensions and features, inputs and synchronization.
 - `docs/network.md`: the network and its passes.
-- `docs/weights.md`: which libraries the runtime reads, where it looks for them, and how it reads the weights.
+- `docs/weights.md`: which library the runtime reads, where it looks for it, and how it reads the weights.
 
 ## Build
 
