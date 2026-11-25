@@ -8,12 +8,26 @@ it. Nothing is written to disk.
 The runtime reads `libnvidia-ngx-dlssd.so.310.9.16` of the DLSS SDK ([direct download](https://github.com/NVIDIA/DLSS/raw/v310.9.16/lib/Linux_x86_64/rel/libnvidia-ngx-dlssd.so.310.9.16)). The file can have any name. It is only a
 data file for OpenDLSS-RR, so a Windows host reads it too. `open()` refuses a file with a different SHA-256.
 
-A host can also pass the bytes of the file in `Settings::libraryData`; then nothing is searched. Else `Weights::find()` (public:
+## Weights range
+
+All the data that the runtime reads lies in bytes 193196 to 7533535 of the library: 7340340 bytes, about 15 % of the file.
+`libraryRange` in `OpenDlssRr/LibraryRange.h` gives the link, the offset, the size and the SHA-256. The header needs no Vulkan, so a host
+build without the runtime can include it. A host can download only these bytes with the HTTP header
+`Range: bytes=193196-7533535`, for example in a browser. The link is the one on `raw.githubusercontent.com`: it sends CORS headers and
+answers range requests, while the `github.com` link redirects without CORS headers.
+
+Everywhere the runtime takes the library, it also takes the range alone: a file of either size, under any name, or the bytes in
+`Settings::libraryData`. It tells them apart by size and checks the SHA-256 of each. `checkLibrary()` makes the same check, so a host can check a download
+before it keeps it.
+
+## Search
+
+A host can also pass the bytes of the file, or of the range, in `Settings::libraryData`; then nothing is searched. Else `Weights::find()` (public:
 `findLibrary()`) takes the first of:
 
 1. `Settings::library`, if it is not empty;
 2. the path in the environment variable `OPENDLSS_RR_LIBRARY`;
-3. the file with the size of the library in `getLibraryFolder()`: `$XDG_DATA_HOME/OpenDLSS-RR` or `~/.local/share/OpenDLSS-RR`
+3. the file with the size of the library or of the range in `getLibraryFolder()`: `$XDG_DATA_HOME/OpenDLSS-RR` or `~/.local/share/OpenDLSS-RR`
    (Linux), `%LOCALAPPDATA%\OpenDLSS-RR` (Windows).
 
 When it finds nothing, it creates `getLibraryFolder()`, and the error gives the download link and the folder.
@@ -35,7 +49,7 @@ buffer of a network kernel (`docs/network.md`), `tKK` the tensor in it.
 
 ## Unpacking
 
-`Weights::open()` reads the library once: it checks the SHA-256, reads each tensor, rounds the `E4m3` tensors and reads the constants and
+`Weights::open()` reads the library or the range once: it checks the SHA-256, reads each tensor, rounds the `E4m3` tensors and reads the constants and
 the two `pairScale` factors.
 
 `Network::open()` then makes the attention bias table of each head, `(M + Mᵀ) · a · b` with M the 64x64 tensor of the head and a, b the

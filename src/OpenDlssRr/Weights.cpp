@@ -59,15 +59,23 @@ std::filesystem::path environment(const char* name) {
 std::filesystem::path findInFolder(const std::filesystem::path& folder) {
     std::error_code error;
     for (std::filesystem::directory_iterator entry(folder, error), end; !error && entry != end; entry.increment(error))
-        if (entry->is_regular_file(error) && entry->file_size(error) == librarySize)
-            return entry->path();
+        if (entry->is_regular_file(error))
+            if (const std::uintmax_t size = entry->file_size(error); size == librarySize || size == libraryRange.size)
+                return entry->path();
     return {};
 }
 
-std::expected<std::span<const std::byte>, Error> range(const std::span<const std::byte> file, const std::uint64_t offset, const std::uint64_t size) {
-    if (offset > file.size() || size > file.size() - offset)
+//! The bytes of the whole library or of its weights range, and the library offset of their first byte.
+struct Source {
+    std::span<const std::byte> bytes;
+    std::uint64_t base = 0;
+};
+
+//! Bytes at a library offset.
+std::expected<std::span<const std::byte>, Error> range(const Source& source, const std::uint64_t offset, const std::uint64_t size) {
+    if (offset < source.base || offset - source.base > source.bytes.size() || size > source.bytes.size() - (offset - source.base))
         return fail(std::format("the range {:#x} + {} is outside the library", offset, size));
-    return file.subspan(offset, size);
+    return source.bytes.subspan(offset - source.base, size);
 }
 
 std::vector<std::uint16_t> halves(const std::span<const std::byte> bytes) {
@@ -126,10 +134,20 @@ std::expected<void, Error> Weights::open(const std::filesystem::path& library) {
     return {};
 }
 
-std::expected<void, Error> Weights::open(const std::span<const std::byte> bytes) {
+std::expected<void, Error> Weights::check(const std::span<const std::byte> bytes) {
+    if (bytes.size() != librarySize && bytes.size() != libraryRange.size)
+        return fail(std::format("not the supported DLSS Ray Reconstruction library ({} bytes, not {} or the {} bytes at {} of it): download {}", bytes.size(),
+                                librarySize, libraryRange.size, libraryRange.offset, downloadUrl));
     const std::string digest = sha256(bytes);
-    if (digest != librarySha256)
+    if (digest != (bytes.size() == librarySize ? librarySha256 : libraryRange.sha256))
         return fail(std::format("not the supported DLSS Ray Reconstruction library (SHA-256 {}): download {}", digest, downloadUrl));
+    return {};
+}
+
+std::expected<void, Error> Weights::open(const std::span<const std::byte> data) {
+    if (auto checked = check(data); !checked)
+        return checked;
+    const Source bytes{data, data.size() == librarySize ? 0 : libraryRange.offset};
 
     const auto lutBytes = range(bytes, lutOffset, 65536 * 2);
     if (!lutBytes)

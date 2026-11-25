@@ -13,7 +13,10 @@ download [`libnvidia-ngx-dlssd.so.310.9.16`](https://github.com/NVIDIA/DLSS/raw/
 | Windows | `%LOCALAPPDATA%\OpenDLSS-RR` |
 
 The same file works on Linux and Windows: the runtime only reads its data. A host can also give the path of the file, under any name,
-in `Settings::library`.
+in `Settings::library`, or its bytes in `Settings::libraryData`.
+
+The runtime only needs 7.3 MB of the 48 MB file. A host, such as a browser, can download just that range (`libraryRange` in `OpenDlssRr/LibraryRange.h`) and use it
+in place of the file anywhere (`docs/weights.md`).
 
 ## Use
 

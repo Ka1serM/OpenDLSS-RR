@@ -135,6 +135,10 @@ std::expected<std::filesystem::path, Error> findLibrary(const std::filesystem::p
     return Weights::find(library);
 }
 
+std::expected<void, Error> checkLibrary(const std::span<const std::byte> bytes) {
+    return Weights::check(bytes);
+}
+
 RayReconstruction::RayReconstruction() = default;
 RayReconstruction::RayReconstruction(RayReconstruction&&) noexcept = default;
 RayReconstruction& RayReconstruction::operator=(RayReconstruction&&) noexcept = default;

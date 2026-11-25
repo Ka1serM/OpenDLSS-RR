@@ -11,6 +11,7 @@
 
 #include <vulkan/vulkan.h>
 
+#include "OpenDlssRr/LibraryRange.h"
 #include "OpenDlssRr/ShaderCode.h"
 #include "OpenDlssRr/Vulkan/Error.h"
 
@@ -33,6 +34,8 @@ using Error = Vulkan::Error;
 [[nodiscard]] std::filesystem::path getLibraryFolder();
 //! The DLSS Ray Reconstruction library that open() reads with Settings::library (see there), or why there is none.
 [[nodiscard]] std::expected<std::filesystem::path, Error> findLibrary(const std::filesystem::path& library = {});
+//! Whether the bytes are the library or its libraryRange (LibraryRange.h), by size and SHA-256; a host checks a download before it keeps it.
+[[nodiscard]] std::expected<void, Error> checkLibrary(std::span<const std::byte> bytes);
 
 //! An image of the host in VK_IMAGE_LAYOUT_GENERAL with one mip level and one layer. Inputs need sampled use, the output storage use.
 struct Texture {
@@ -73,7 +76,7 @@ struct Settings {
     VkPipelineCache pipelineCache = VK_NULL_HANDLE;
     //! Optional: the path of the DLSS Ray Reconstruction library, under any name; if empty, findLibrary() searches (docs/weights.md).
     std::filesystem::path library;
-    //! Optional: the bytes of the library in memory, read in place of `library`; open() does not keep them.
+    //! Optional: the bytes of the library, or of its libraryRange, read in place of `library`; open() does not keep them.
     std::span<const std::byte> libraryData;
     ShaderCode shaders;
     std::uint32_t renderWidth = 0;

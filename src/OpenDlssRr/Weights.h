@@ -11,6 +11,7 @@
 #include <string_view>
 #include <vector>
 
+#include "OpenDlssRr/LibraryRange.h"
 #include "OpenDlssRr/Vulkan/Error.h"
 
 namespace OpenDlssRr {
@@ -30,9 +31,11 @@ public:
     [[nodiscard]] static std::filesystem::path folder();
     //! `library` if it is not empty, else OPENDLSS_RR_LIBRARY, else the file in folder().
     [[nodiscard]] static std::expected<std::filesystem::path, Vulkan::Error> find(const std::filesystem::path& library);
-    //! Reads libnvidia-ngx-dlssd.so.310.9.16 of the DLSS SDK, under any name.
+    //! Whether the bytes are the library or its libraryRange, by size and SHA-256.
+    [[nodiscard]] static std::expected<void, Vulkan::Error> check(std::span<const std::byte> bytes);
+    //! Reads libnvidia-ngx-dlssd.so.310.9.16 of the DLSS SDK, or its libraryRange, under any name.
     [[nodiscard]] std::expected<void, Vulkan::Error> open(const std::filesystem::path& library);
-    //! Reads the bytes of the library from memory.
+    //! Reads the bytes of the library, or of its libraryRange, from memory.
     [[nodiscard]] std::expected<void, Vulkan::Error> open(std::span<const std::byte> bytes);
 
     //! Name ("b16.t08": buffer 16, tensor 8) to tensor.
